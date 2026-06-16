@@ -1,0 +1,1312 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>倍率资金均衡分配工具</title>
+  <style>
+    :root {
+      --bg: #edf4f1;
+      --bg-soft: #f8fbf9;
+      --panel: #ffffff;
+      --line: #d8e1de;
+      --line-strong: #bfd1cc;
+      --text: #14211f;
+      --muted: #60736f;
+      --accent: #0f766e;
+      --accent-strong: #0b5f59;
+      --accent-soft: #dff2ef;
+      --good: #15803d;
+      --bad: #b42318;
+      --warn: #b45309;
+      --gold: #b7791f;
+      --slate: #475569;
+      --soft: #e8f3f1;
+      --shadow: 0 18px 42px rgba(20, 33, 31, 0.11);
+      --shadow-soft: 0 8px 22px rgba(20, 33, 31, 0.07);
+      font-family: "Microsoft YaHei", "PingFang SC", "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background:
+        linear-gradient(180deg, rgba(15, 118, 110, 0.12) 0, rgba(15, 118, 110, 0.04) 310px, transparent 311px),
+        linear-gradient(90deg, rgba(15, 118, 110, 0.035) 1px, transparent 1px),
+        linear-gradient(180deg, var(--bg-soft) 0%, var(--bg) 100%);
+      background-size: auto, 44px 44px, auto;
+      color: var(--text);
+    }
+
+    main {
+      width: min(1400px, calc(100vw - 32px));
+      margin: 0 auto;
+      padding: 28px 0 38px;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      margin-bottom: 18px;
+      padding: 24px;
+      position: relative;
+      overflow: hidden;
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 8px;
+      background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0 1px, transparent 1px 18px),
+        linear-gradient(135deg, #102823 0%, #0f766e 58%, #1d8b7f 100%);
+      box-shadow: var(--shadow);
+    }
+
+    header::after {
+      content: "";
+      position: absolute;
+      inset: auto -40px -90px auto;
+      width: 360px;
+      height: 220px;
+      transform: rotate(-16deg);
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0));
+      pointer-events: none;
+    }
+
+    header > * {
+      position: relative;
+      z-index: 1;
+    }
+
+    h1 {
+      margin: 0 0 6px;
+      font-size: clamp(24px, 3vw, 34px);
+      line-height: 1.15;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      margin: 0;
+      color: rgba(255, 255, 255, 0.82);
+      max-width: 820px;
+      line-height: 1.6;
+    }
+
+    .header-tools {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 8px;
+      min-width: 250px;
+    }
+
+    .tool-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      min-height: 32px;
+      padding: 0 11px;
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.12);
+      color: rgba(255, 255, 255, 0.9);
+      font-size: 12px;
+      font-weight: 700;
+      backdrop-filter: blur(8px);
+    }
+
+    .tool-chip::before {
+      content: "";
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #a7f3d0;
+      box-shadow: 0 0 0 3px rgba(167, 243, 208, 0.14);
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(320px, 410px) minmax(0, 1fr);
+      gap: 16px;
+      align-items: start;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid rgba(191, 209, 204, 0.92);
+      border-radius: 8px;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .controls {
+      padding: 18px;
+      display: grid;
+      gap: 16px;
+      position: sticky;
+      top: 18px;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(248, 251, 249, 0.96)),
+        linear-gradient(135deg, rgba(15, 118, 110, 0.08), transparent 48%);
+    }
+
+    .panel-title {
+      margin: 0;
+      font-size: 17px;
+      line-height: 1.3;
+    }
+
+    label {
+      display: grid;
+      gap: 7px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    input,
+    textarea,
+    button {
+      font: inherit;
+    }
+
+    input,
+    textarea {
+      width: 100%;
+      border: 1px solid var(--line-strong);
+      border-radius: 8px;
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.92);
+      outline: none;
+      transition: border-color 0.16s ease, box-shadow 0.16s ease;
+    }
+
+    input {
+      height: 42px;
+      padding: 0 12px;
+      font-weight: 700;
+    }
+
+    textarea {
+      min-height: 126px;
+      resize: vertical;
+      padding: 11px 12px;
+      line-height: 1.45;
+    }
+
+    input:focus,
+    textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.12);
+    }
+
+    .button-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 9px;
+    }
+
+    button {
+      min-height: 40px;
+      border: 1px solid var(--line-strong);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--text);
+      padding: 0 14px;
+      cursor: pointer;
+      font-weight: 700;
+      box-shadow: 0 5px 12px rgba(20, 33, 31, 0.06);
+      transition: transform 0.14s ease, border-color 0.14s ease, background 0.14s ease, box-shadow 0.14s ease;
+    }
+
+    button:hover {
+      border-color: var(--accent);
+      transform: translateY(-1px);
+      box-shadow: 0 8px 18px rgba(20, 33, 31, 0.1);
+    }
+
+    button.primary {
+      background: linear-gradient(180deg, #138b81, var(--accent));
+      color: #fff;
+      border-color: var(--accent);
+      box-shadow: 0 10px 18px rgba(15, 118, 110, 0.22);
+    }
+
+    button.primary:hover {
+      background: var(--accent-strong);
+      border-color: var(--accent-strong);
+    }
+
+    .formula {
+      border-top: 1px solid var(--line);
+      padding-top: 15px;
+      color: var(--muted);
+      line-height: 1.65;
+      font-size: 13px;
+    }
+
+    .formula strong {
+      color: var(--text);
+    }
+
+    .formula p {
+      margin: 0;
+    }
+
+    .math-block {
+      display: grid;
+      place-items: center;
+      margin: 12px 0;
+      padding: 10px 12px;
+      border: 1px solid #c7ded8;
+      border-radius: 8px;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.5), transparent),
+        var(--soft);
+      color: var(--text);
+      overflow-x: auto;
+    }
+
+    math {
+      font-family: "Cambria Math", "STIX Two Math", "Times New Roman", serif;
+      font-size: 1.08em;
+    }
+
+    .metric-label {
+      display: grid;
+      gap: 3px;
+      align-items: start;
+      justify-items: start;
+    }
+
+    .metric-label math {
+      color: var(--text);
+      font-size: 1.08em;
+      line-height: 1.1;
+    }
+
+    .workspace {
+      display: grid;
+      gap: 16px;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .metric {
+      --metric-color: var(--accent);
+      --metric-bg: #f4faf8;
+      position: relative;
+      overflow: hidden;
+      padding: 16px;
+      min-height: 104px;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.86), rgba(255, 255, 255, 0.94)),
+        linear-gradient(135deg, var(--metric-bg), #ffffff);
+    }
+
+    .metric::before {
+      content: "";
+      position: absolute;
+      inset: 0 0 auto;
+      height: 4px;
+      background: var(--metric-color);
+    }
+
+    .metric::after {
+      content: "";
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: color-mix(in srgb, var(--metric-color) 16%, transparent);
+      pointer-events: none;
+    }
+
+    .metric-return {
+      --metric-color: var(--accent);
+      --metric-bg: #e8f6f3;
+    }
+
+    .metric-profit {
+      --metric-color: var(--gold);
+      --metric-bg: #fff7e8;
+    }
+
+    .metric-worst {
+      --metric-color: var(--bad);
+      --metric-bg: #fff0ed;
+    }
+
+    .metric-risk {
+      --metric-color: var(--slate);
+      --metric-bg: #eef3f7;
+    }
+
+    .metric span {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .metric strong {
+      display: block;
+      margin-top: 10px;
+      font-size: clamp(20px, 2.4vw, 28px);
+      line-height: 1.1;
+      white-space: nowrap;
+    }
+
+    .metric small {
+      display: block;
+      margin-top: 8px;
+      color: var(--muted);
+      line-height: 1.35;
+    }
+
+    .chart-panel {
+      padding: 16px;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(248, 251, 249, 0.98)),
+        linear-gradient(135deg, rgba(15, 118, 110, 0.05), transparent 46%);
+    }
+
+    .chart-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 12px;
+    }
+
+    .chart-head p {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .legend {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .legend i {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+      margin-right: 5px;
+      vertical-align: -2px;
+    }
+
+    .legend .manual {
+      background: var(--accent);
+    }
+
+    .legend .equal {
+      background: #4b5563;
+    }
+
+    .chart-wrap {
+      position: relative;
+      width: 100%;
+      min-height: 420px;
+      overflow: hidden;
+      border: 1px solid var(--line-strong);
+      border-radius: 8px;
+      background:
+        linear-gradient(90deg, rgba(15, 118, 110, 0.035) 1px, transparent 1px),
+        linear-gradient(180deg, #ffffff 0%, #f8fbfa 100%);
+      background-size: 46px 100%, auto;
+      touch-action: none;
+    }
+
+    svg {
+      display: block;
+      width: 100%;
+      height: 420px;
+      user-select: none;
+    }
+
+    .bar-hit {
+      cursor: ns-resize;
+      fill: transparent;
+    }
+
+    .bar {
+      rx: 5;
+      transition: opacity 0.12s ease;
+    }
+
+    .bar.dragging {
+      opacity: 0.72;
+    }
+
+    .handle {
+      cursor: ns-resize;
+      fill: #fff;
+      stroke: var(--accent-strong);
+      stroke-width: 2;
+    }
+
+    .axis-label,
+    .bar-label,
+    .bar-value,
+    .stake-label {
+      fill: var(--muted);
+      font-size: 12px;
+    }
+
+    .bar-value {
+      fill: var(--text);
+      font-weight: 700;
+    }
+
+    .zero-line {
+      stroke: #6b7d79;
+      stroke-width: 1.2;
+    }
+
+    .grid-line {
+      stroke: #e6eeeb;
+      stroke-width: 1;
+    }
+
+    .equal-line {
+      stroke: #4b5563;
+      stroke-width: 1.5;
+      stroke-dasharray: 6 5;
+    }
+
+    .table-panel {
+      overflow: hidden;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 251, 249, 0.98));
+    }
+
+    .table-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 16px 0;
+    }
+
+    .table-scroll {
+      overflow-x: auto;
+      padding: 12px 16px 16px;
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      min-width: 880px;
+    }
+
+    th,
+    td {
+      border-bottom: 1px solid var(--line);
+      padding: 10px 8px;
+      text-align: right;
+      vertical-align: middle;
+      white-space: nowrap;
+    }
+
+    th:first-child,
+    td:first-child {
+      text-align: left;
+    }
+
+    th {
+      color: var(--muted);
+      font-size: 12px;
+      letter-spacing: 0;
+      font-weight: 800;
+      background: #f1f7f5;
+    }
+
+    td {
+      font-size: 14px;
+      background: rgba(255, 255, 255, 0.64);
+      transition: background 0.14s ease;
+    }
+
+    tbody tr:hover td {
+      background: #f5faf8;
+    }
+
+    td input {
+      height: 36px;
+      min-width: 92px;
+      text-align: right;
+      background: #fff;
+    }
+
+    td input.name-input {
+      text-align: left;
+      min-width: 112px;
+    }
+
+    .profit-good {
+      color: var(--good);
+      font-weight: 800;
+    }
+
+    .profit-bad {
+      color: var(--bad);
+      font-weight: 800;
+    }
+
+    .status {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .status.warn {
+      color: var(--warn);
+      font-weight: 700;
+    }
+
+    .delete-btn {
+      min-height: 34px;
+      padding: 0 10px;
+      color: var(--bad);
+      box-shadow: none;
+    }
+
+    @media (max-width: 1100px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .summary-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 680px) {
+      main {
+        width: min(100vw - 20px, 1400px);
+        padding-top: 14px;
+      }
+
+      header,
+      .chart-head,
+      .table-head {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      header {
+        padding: 20px;
+      }
+
+      .header-tools {
+        justify-content: flex-start;
+        min-width: 0;
+      }
+
+      .controls {
+        position: static;
+      }
+
+      .summary-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .chart-wrap {
+        min-height: 360px;
+      }
+
+      svg {
+        height: 360px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div>
+        <h1>倍率资金均衡分配工具</h1>
+        <p class="subtitle">输入本金和一组倍率，页面会计算均衡分配方案，并展示手动分配下每个倍率命中时的净收益。拖动收益图中的柱形即可改变该倍率投入，其余倍率投入会按剩余比例自动联动。</p>
+      </div>
+      <div class="header-tools" aria-label="工具能力">
+        <span class="tool-chip">本金守恒</span>
+        <span class="tool-chip">拖拽调仓</span>
+        <span class="tool-chip">均衡回款</span>
+      </div>
+    </header>
+
+    <section class="layout">
+      <aside class="panel controls" aria-label="输入控制">
+        <h2 class="panel-title">输入</h2>
+        <label>
+          本金
+          <input id="principalInput" type="number" min="0" step="0.01" value="1000">
+        </label>
+        <label>
+          倍率列表
+          <textarea id="oddsInput" spellcheck="false">1.80
+2.40
+4.20</textarea>
+        </label>
+        <div class="button-row">
+          <button class="primary" id="applyOddsBtn" type="button">应用倍率</button>
+          <button id="equalizeBtn" type="button">套用均衡分配</button>
+          <button id="addRowBtn" type="button">增加倍率</button>
+        </div>
+        <p id="inputStatus" class="status"></p>
+        <div class="formula">
+          <p><strong>均衡分配</strong>让每个结果命中时的总回款相同。若本金为 <math><mi>B</mi></math>、倍率为 <math><msub><mi>m</mi><mi>i</mi></msub></math>，则第 <math><mi>i</mi></math> 项投入为：</p>
+          <div class="math-block" aria-label="均衡投入公式">
+            <math display="block">
+              <mrow>
+                <msub><mi>s</mi><mi>i</mi></msub>
+                <mo>=</mo>
+                <mfrac>
+                  <mi>B</mi>
+                  <mrow>
+                    <msub><mi>m</mi><mi>i</mi></msub>
+                    <mo>&middot;</mo>
+                    <msub>
+                      <mo>&sum;</mo>
+                      <mi>j</mi>
+                    </msub>
+                    <mfrac>
+                      <mn>1</mn>
+                      <msub><mi>m</mi><mi>j</mi></msub>
+                    </mfrac>
+                  </mrow>
+                </mfrac>
+              </mrow>
+            </math>
+          </div>
+          <p><math><msub><mo>&sum;</mo><mi>j</mi></msub><mfrac><mn>1</mn><msub><mi>m</mi><mi>j</mi></msub></mfrac></math> 小于 1 时，均衡净收益为正；大于 1 时，任何均衡方案都会出现负收益。</p>
+        </div>
+      </aside>
+
+      <section class="workspace">
+        <section class="summary-grid" aria-label="摘要">
+          <article class="panel metric metric-return">
+            <span>均衡总回款</span>
+            <strong id="equalReturnMetric">-</strong>
+            <small>每个结果命中时相同的回款</small>
+          </article>
+          <article class="panel metric metric-profit">
+            <span>均衡净收益</span>
+            <strong id="equalProfitMetric">-</strong>
+            <small id="equalRoiMetric">-</small>
+          </article>
+          <article class="panel metric metric-worst">
+            <span>当前最差净收益</span>
+            <strong id="worstProfitMetric">-</strong>
+            <small>手动分配后的最低结果</small>
+          </article>
+          <article class="panel metric metric-risk">
+            <span class="metric-label">
+              <span>倒数和</span>
+              <math aria-label="所有倍率倒数之和">
+                <msub><mo>&sum;</mo><mi>i</mi></msub>
+                <mfrac>
+                  <mn>1</mn>
+                  <msub><mi>m</mi><mi>i</mi></msub>
+                </mfrac>
+              </math>
+            </span>
+            <strong id="inverseSumMetric">-</strong>
+            <small id="inverseStatusMetric">-</small>
+          </article>
+        </section>
+
+        <section class="panel chart-panel">
+          <div class="chart-head">
+            <div>
+              <h2 class="panel-title">收益图</h2>
+              <p>柱形表示当前手动分配下“该倍率命中”的净收益；虚线为均衡分配净收益。</p>
+            </div>
+            <div class="legend" aria-label="图例">
+              <span><i class="manual"></i>当前净收益</span>
+              <span><i class="equal"></i>均衡线</span>
+            </div>
+          </div>
+          <div class="chart-wrap">
+            <svg id="profitChart" role="img" aria-label="各倍率净收益柱形图"></svg>
+          </div>
+        </section>
+
+        <section class="panel table-panel">
+          <div class="table-head">
+            <h2 class="panel-title">分配明细</h2>
+            <p id="allocationStatus" class="status"></p>
+          </div>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>名称</th>
+                  <th>倍率</th>
+                  <th>当前投入</th>
+                  <th>当前占比</th>
+                  <th>命中回款</th>
+                  <th>当前净收益</th>
+                  <th>均衡投入</th>
+                  <th>均衡占比</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="detailBody"></tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+    </section>
+  </main>
+
+  <script>
+    const principalInput = document.getElementById("principalInput");
+    const oddsInput = document.getElementById("oddsInput");
+    const applyOddsBtn = document.getElementById("applyOddsBtn");
+    const equalizeBtn = document.getElementById("equalizeBtn");
+    const addRowBtn = document.getElementById("addRowBtn");
+    const chart = document.getElementById("profitChart");
+    const detailBody = document.getElementById("detailBody");
+    const inputStatus = document.getElementById("inputStatus");
+    const allocationStatus = document.getElementById("allocationStatus");
+
+    const formatMoney = new Intl.NumberFormat("zh-CN", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+    const formatNumber = new Intl.NumberFormat("zh-CN", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 4
+    });
+    const AUTO_APPLY_ODDS_DELAY_MS = 650;
+
+    let state = {
+      principal: 1000,
+      items: [
+        { name: "倍率 1", multiplier: 1.8, stake: 540.54 },
+        { name: "倍率 2", multiplier: 2.4, stake: 405.41 },
+        { name: "倍率 3", multiplier: 4.2, stake: 231.66 }
+      ],
+      draggingIndex: null
+    };
+    let autoApplyOddsTimer = null;
+    let isComposingOddsInput = false;
+
+    function clamp(value, min, max) {
+      return Math.min(max, Math.max(min, value));
+    }
+
+    function money(value) {
+      return formatMoney.format(Number.isFinite(value) ? value : 0);
+    }
+
+    function pct(value) {
+      return `${formatNumber.format((Number.isFinite(value) ? value : 0) * 100)}%`;
+    }
+
+    function parseMultiplierText(text) {
+      const lines = text.split(/\n+/).map(line => line.trim()).filter(Boolean);
+      const parsed = [];
+
+      for (const line of lines) {
+        const matches = [...line.matchAll(/[-+]?\d+(?:\.\d+)?/g)];
+        if (matches.length === 1) {
+          const value = Number(matches[0][0]);
+          if (value > 0) {
+            const label = line.replace(matches[0][0], "").replace(/[：:，,;；|\-]/g, " ").trim();
+            parsed.push({ name: label || `倍率 ${parsed.length + 1}`, multiplier: value });
+          }
+        } else if (matches.length > 1) {
+          for (const match of matches) {
+            const value = Number(match[0]);
+            if (value > 0) {
+              parsed.push({ name: `倍率 ${parsed.length + 1}`, multiplier: value });
+            }
+          }
+        }
+      }
+
+      if (parsed.length === 0) {
+        for (const match of text.matchAll(/[-+]?\d+(?:\.\d+)?/g)) {
+          const value = Number(match[0]);
+          if (value > 0) {
+            parsed.push({ name: `倍率 ${parsed.length + 1}`, multiplier: value });
+          }
+        }
+      }
+
+      return parsed;
+    }
+
+    function validItems() {
+      return state.items.filter(item => item.multiplier > 0);
+    }
+
+    function getEqualPlan() {
+      const items = validItems();
+      const inverseSum = items.reduce((sum, item) => sum + 1 / item.multiplier, 0);
+      const equalReturn = inverseSum > 0 ? state.principal / inverseSum : 0;
+      const equalProfit = equalReturn - state.principal;
+      const stakes = state.items.map(item => item.multiplier > 0 ? equalReturn / item.multiplier : 0);
+      return { inverseSum, equalReturn, equalProfit, stakes };
+    }
+
+    function normalizeStakes() {
+      if (state.items.length === 0) return;
+      const total = state.items.reduce((sum, item) => sum + Math.max(0, item.stake || 0), 0);
+      if (total <= 0) {
+        const split = state.principal / state.items.length;
+        state.items.forEach(item => { item.stake = split; });
+        return;
+      }
+      const factor = state.principal / total;
+      state.items.forEach(item => {
+        item.stake = Math.max(0, item.stake || 0) * factor;
+      });
+    }
+
+    function setStake(index, desiredStake) {
+      if (state.items.length === 0) return;
+      if (state.items.length === 1) {
+        state.items[0].stake = state.principal;
+        return;
+      }
+
+      const current = clamp(desiredStake, 0, state.principal);
+      const oldStake = state.items[index].stake || 0;
+      const oldOtherTotal = Math.max(0, state.principal - oldStake);
+      const newOtherTotal = Math.max(0, state.principal - current);
+
+      state.items[index].stake = current;
+
+      if (oldOtherTotal > 0.000001) {
+        const factor = newOtherTotal / oldOtherTotal;
+        state.items.forEach((item, itemIndex) => {
+          if (itemIndex !== index) item.stake = Math.max(0, item.stake || 0) * factor;
+        });
+      } else {
+        const others = state.items.filter((_, itemIndex) => itemIndex !== index);
+        const equalShare = newOtherTotal / others.length;
+        state.items.forEach((item, itemIndex) => {
+          if (itemIndex !== index) item.stake = equalShare;
+        });
+      }
+
+      normalizeStakes();
+    }
+
+    function applyEqualPlan() {
+      const plan = getEqualPlan();
+      state.items.forEach((item, index) => {
+        item.stake = plan.stakes[index] || 0;
+      });
+      normalizeStakes();
+      render();
+    }
+
+    function readPrincipal() {
+      const nextPrincipal = Math.max(0, Number(principalInput.value) || 0);
+      const oldPrincipal = state.principal || 0;
+      state.principal = nextPrincipal;
+      if (oldPrincipal > 0) {
+        const factor = nextPrincipal / oldPrincipal;
+        state.items.forEach(item => {
+          item.stake = Math.max(0, item.stake || 0) * factor;
+        });
+      }
+      normalizeStakes();
+    }
+
+    function applyOddsFromText() {
+      const parsed = parseMultiplierText(oddsInput.value);
+      if (parsed.length === 0) {
+        inputStatus.textContent = "未识别到有效倍率。";
+        inputStatus.classList.add("warn");
+        return;
+      }
+
+      state.items = parsed.map((item, index) => ({
+        name: item.name || `倍率 ${index + 1}`,
+        multiplier: item.multiplier,
+        stake: 0
+      }));
+      inputStatus.textContent = `已读取 ${parsed.length} 个倍率。`;
+      inputStatus.classList.remove("warn");
+      applyEqualPlan();
+    }
+
+    function buildScale(values) {
+      const principal = Math.max(state.principal, 1);
+      const maxValue = Math.max(0, ...values, ...state.items.map(item => principal * Math.max(0, item.multiplier - 1)));
+      const minValue = Math.min(-principal, ...values);
+      const padding = Math.max(principal * 0.08, (maxValue - minValue) * 0.08, 1);
+      return {
+        min: minValue - padding,
+        max: maxValue + padding
+      };
+    }
+
+    function valueToY(value, scale, top, height) {
+      return top + (scale.max - value) / (scale.max - scale.min) * height;
+    }
+
+    function yToValue(y, scale, top, height) {
+      const ratio = clamp((y - top) / height, 0, 1);
+      return scale.max - ratio * (scale.max - scale.min);
+    }
+
+    function renderSummary(plan, profits) {
+      const worstProfit = profits.length ? Math.min(...profits) : 0;
+      document.getElementById("equalReturnMetric").textContent = money(plan.equalReturn);
+      document.getElementById("equalProfitMetric").textContent = money(plan.equalProfit);
+      document.getElementById("equalProfitMetric").className = plan.equalProfit >= 0 ? "profit-good" : "profit-bad";
+      document.getElementById("equalRoiMetric").textContent = `ROI ${pct(state.principal > 0 ? plan.equalProfit / state.principal : 0)}`;
+      document.getElementById("worstProfitMetric").textContent = money(worstProfit);
+      document.getElementById("worstProfitMetric").className = worstProfit >= 0 ? "profit-good" : "profit-bad";
+      document.getElementById("inverseSumMetric").textContent = formatNumber.format(plan.inverseSum);
+      document.getElementById("inverseStatusMetric").textContent =
+        plan.inverseSum < 1 ? "理论上存在均衡正收益" :
+        plan.inverseSum === 1 ? "均衡状态接近打平" :
+        "均衡状态为负收益";
+    }
+
+    function renderChart(plan, profits) {
+      const width = chart.clientWidth || chart.parentElement.clientWidth || 800;
+      const height = chart.clientHeight || 420;
+      chart.setAttribute("viewBox", `0 0 ${width} ${height}`);
+      chart.innerHTML = "";
+
+      if (state.items.length === 0) return;
+
+      const margin = { top: 26, right: 24, bottom: 74, left: 70 };
+      const plotWidth = Math.max(1, width - margin.left - margin.right);
+      const plotHeight = Math.max(1, height - margin.top - margin.bottom);
+      const scale = buildScale([...profits, plan.equalProfit]);
+      const zeroY = valueToY(0, scale, margin.top, plotHeight);
+      const equalY = valueToY(plan.equalProfit, scale, margin.top, plotHeight);
+      const groupWidth = plotWidth / state.items.length;
+      const barWidth = Math.min(70, Math.max(26, groupWidth * 0.44));
+      const ns = "http://www.w3.org/2000/svg";
+
+      function node(name, attrs = {}) {
+        const el = document.createElementNS(ns, name);
+        Object.entries(attrs).forEach(([key, value]) => el.setAttribute(key, value));
+        return el;
+      }
+
+      const tickValues = [scale.min, (scale.min + 0) / 2, 0, (scale.max + 0) / 2, scale.max]
+        .filter((value, index, arr) => index === 0 || Math.abs(value - arr[index - 1]) > 0.01);
+
+      for (const tick of tickValues) {
+        const y = valueToY(tick, scale, margin.top, plotHeight);
+        chart.appendChild(node("line", {
+          x1: margin.left,
+          x2: width - margin.right,
+          y1: y,
+          y2: y,
+          class: tick === 0 ? "zero-line" : "grid-line"
+        }));
+        const label = node("text", {
+          x: margin.left - 10,
+          y: y + 4,
+          "text-anchor": "end",
+          class: "axis-label"
+        });
+        label.textContent = money(tick);
+        chart.appendChild(label);
+      }
+
+      chart.appendChild(node("line", {
+        x1: margin.left,
+        x2: width - margin.right,
+        y1: equalY,
+        y2: equalY,
+        class: "equal-line"
+      }));
+
+      state.items.forEach((item, index) => {
+        const value = profits[index] || -state.principal;
+        const xCenter = margin.left + groupWidth * index + groupWidth / 2;
+        const valueY = valueToY(value, scale, margin.top, plotHeight);
+        const y = Math.min(valueY, zeroY);
+        const barHeight = Math.max(2, Math.abs(zeroY - valueY));
+        const color = value >= 0 ? "var(--good)" : "var(--bad)";
+        const bar = node("rect", {
+          x: xCenter - barWidth / 2,
+          y,
+          width: barWidth,
+          height: barHeight,
+          fill: color,
+          class: `bar${state.draggingIndex === index ? " dragging" : ""}`,
+          "data-index": index
+        });
+        chart.appendChild(bar);
+
+        const hit = node("rect", {
+          x: xCenter - groupWidth / 2,
+          y: margin.top,
+          width: groupWidth,
+          height: plotHeight,
+          class: "bar-hit",
+          "data-index": index
+        });
+        chart.appendChild(hit);
+
+        const handle = node("circle", {
+          cx: xCenter,
+          cy: valueY,
+          r: 7,
+          class: "handle",
+          "data-index": index
+        });
+        chart.appendChild(handle);
+
+        const valueText = node("text", {
+          x: xCenter,
+          y: valueY < zeroY ? valueY - 11 : valueY + 22,
+          "text-anchor": "middle",
+          class: "bar-value"
+        });
+        valueText.textContent = money(value);
+        chart.appendChild(valueText);
+
+        const stakeText = node("text", {
+          x: xCenter,
+          y: height - 38,
+          "text-anchor": "middle",
+          class: "stake-label"
+        });
+        stakeText.textContent = money(item.stake);
+        chart.appendChild(stakeText);
+
+        const label = node("text", {
+          x: xCenter,
+          y: height - 18,
+          "text-anchor": "middle",
+          class: "bar-label"
+        });
+        label.textContent = item.name || `倍率 ${index + 1}`;
+        chart.appendChild(label);
+      });
+
+      chart.dataset.scaleMin = String(scale.min);
+      chart.dataset.scaleMax = String(scale.max);
+      chart.dataset.plotTop = String(margin.top);
+      chart.dataset.plotHeight = String(plotHeight);
+    }
+
+    function renderTable(plan, profits) {
+      detailBody.innerHTML = "";
+
+      state.items.forEach((item, index) => {
+        const tr = document.createElement("tr");
+        const gross = item.stake * item.multiplier;
+        const equalStake = plan.stakes[index] || 0;
+
+        tr.innerHTML = `
+          <td><input class="name-input" data-field="name" data-index="${index}" value="${escapeHtml(item.name)}"></td>
+          <td><input type="number" min="0.0001" step="0.01" data-field="multiplier" data-index="${index}" value="${item.multiplier}"></td>
+          <td><input type="number" min="0" step="0.01" data-field="stake" data-index="${index}" value="${item.stake.toFixed(2)}"></td>
+          <td><input type="number" min="0" max="100" step="0.01" data-field="ratio" data-index="${index}" value="${(state.principal > 0 ? item.stake / state.principal * 100 : 0).toFixed(2)}"></td>
+          <td>${money(gross)}</td>
+          <td class="${profits[index] >= 0 ? "profit-good" : "profit-bad"}">${money(profits[index])}</td>
+          <td>${money(equalStake)}</td>
+          <td>${pct(state.principal > 0 ? equalStake / state.principal : 0)}</td>
+          <td><button class="delete-btn" type="button" data-action="delete" data-index="${index}" aria-label="删除 ${escapeHtml(item.name)}">删除</button></td>
+        `;
+        detailBody.appendChild(tr);
+      });
+
+      const totalStake = state.items.reduce((sum, item) => sum + item.stake, 0);
+      allocationStatus.textContent = `当前投入合计 ${money(totalStake)}，本金 ${money(state.principal)}。`;
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;");
+    }
+
+    function render() {
+      if (state.items.length === 0) {
+        detailBody.innerHTML = "";
+        chart.innerHTML = "";
+        return;
+      }
+      normalizeStakes();
+      const plan = getEqualPlan();
+      const profits = state.items.map(item => item.stake * item.multiplier - state.principal);
+      renderSummary(plan, profits);
+      renderChart(plan, profits);
+      renderTable(plan, profits);
+    }
+
+    function clearScheduledOddsApply() {
+      if (autoApplyOddsTimer !== null) {
+        window.clearTimeout(autoApplyOddsTimer);
+        autoApplyOddsTimer = null;
+      }
+    }
+
+    function oddsInputLooksIncomplete(text) {
+      const tail = text.trimEnd();
+      return tail === "" || tail.endsWith(".") || tail.endsWith("+") || tail.endsWith("-");
+    }
+
+    function applyOddsFromTextIfReady() {
+      if (oddsInputLooksIncomplete(oddsInput.value)) return;
+      readPrincipal();
+      applyOddsFromText();
+    }
+
+    function scheduleAutoApplyOdds() {
+      clearScheduledOddsApply();
+      if (isComposingOddsInput || oddsInputLooksIncomplete(oddsInput.value)) return;
+      autoApplyOddsTimer = window.setTimeout(() => {
+        autoApplyOddsTimer = null;
+        applyOddsFromTextIfReady();
+      }, AUTO_APPLY_ODDS_DELAY_MS);
+    }
+
+    principalInput.addEventListener("input", () => {
+      readPrincipal();
+      render();
+    });
+
+    applyOddsBtn.addEventListener("click", () => {
+      clearScheduledOddsApply();
+      readPrincipal();
+      applyOddsFromText();
+    });
+
+    oddsInput.addEventListener("input", scheduleAutoApplyOdds);
+
+    oddsInput.addEventListener("compositionstart", () => {
+      isComposingOddsInput = true;
+      clearScheduledOddsApply();
+    });
+
+    oddsInput.addEventListener("compositionend", () => {
+      isComposingOddsInput = false;
+      scheduleAutoApplyOdds();
+    });
+
+    oddsInput.addEventListener("blur", () => {
+      clearScheduledOddsApply();
+      applyOddsFromTextIfReady();
+    });
+
+    equalizeBtn.addEventListener("click", () => {
+      applyEqualPlan();
+    });
+
+    addRowBtn.addEventListener("click", () => {
+      state.items.push({
+        name: `倍率 ${state.items.length + 1}`,
+        multiplier: 2,
+        stake: 0
+      });
+      normalizeStakes();
+      render();
+    });
+
+    detailBody.addEventListener("change", event => {
+      const target = event.target;
+      const index = Number(target.dataset.index);
+      const field = target.dataset.field;
+      if (!Number.isInteger(index) || !state.items[index]) return;
+
+      if (field === "name") {
+        state.items[index].name = target.value.trim() || `倍率 ${index + 1}`;
+      }
+      if (field === "multiplier") {
+        state.items[index].multiplier = Math.max(0.0001, Number(target.value) || 0.0001);
+      }
+      if (field === "stake") {
+        setStake(index, Number(target.value) || 0);
+      }
+      if (field === "ratio") {
+        setStake(index, state.principal * (Number(target.value) || 0) / 100);
+      }
+      render();
+    });
+
+    detailBody.addEventListener("click", event => {
+      const button = event.target.closest("button[data-action='delete']");
+      if (!button) return;
+      const index = Number(button.dataset.index);
+      if (state.items.length <= 1) return;
+      state.items.splice(index, 1);
+      normalizeStakes();
+      render();
+    });
+
+    function updateFromPointer(event) {
+      if (state.draggingIndex === null) return;
+      const rect = chart.getBoundingClientRect();
+      const y = (event.clientY - rect.top) * (Number(chart.getAttribute("viewBox").split(" ")[3]) / rect.height);
+      const scale = {
+        min: Number(chart.dataset.scaleMin),
+        max: Number(chart.dataset.scaleMax)
+      };
+      const top = Number(chart.dataset.plotTop);
+      const height = Number(chart.dataset.plotHeight);
+      const targetProfit = yToValue(y, scale, top, height);
+      const item = state.items[state.draggingIndex];
+      const nextStake = (targetProfit + state.principal) / item.multiplier;
+      setStake(state.draggingIndex, nextStake);
+      render();
+    }
+
+    chart.addEventListener("pointerdown", event => {
+      const target = event.target.closest("[data-index]");
+      if (!target) return;
+      state.draggingIndex = Number(target.dataset.index);
+      chart.setPointerCapture(event.pointerId);
+      updateFromPointer(event);
+    });
+
+    chart.addEventListener("pointermove", event => {
+      if (state.draggingIndex === null) return;
+      updateFromPointer(event);
+    });
+
+    chart.addEventListener("pointerup", event => {
+      state.draggingIndex = null;
+      if (chart.hasPointerCapture(event.pointerId)) {
+        chart.releasePointerCapture(event.pointerId);
+      }
+      render();
+    });
+
+    chart.addEventListener("pointercancel", () => {
+      state.draggingIndex = null;
+      render();
+    });
+
+    window.addEventListener("resize", render);
+
+    applyEqualPlan();
+  </script>
+</body>
+</html>
